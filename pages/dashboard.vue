@@ -50,11 +50,11 @@ onMounted(async () => {
 
 <template>
   <div>
-    <!-- Bento Grid Layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Welcome Header - Full Width -->
+    <!-- Bento Grid Layout - Responsive -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-5 lg:gap-6">
+        <!-- Welcome Header - Full Width on all -->
         <div
-          class="lg:col-span-12 transition-all duration-500"
+          class="sm:col-span-2 lg:col-span-12 transition-all duration-500"
           :class="showCard(0) ? 'opacity-100 translate-y-0' : (isLoading ? 'opacity-100' : 'opacity-0 translate-y-4')"
         >
           <DashboardWelcomeHeader
@@ -64,9 +64,9 @@ onMounted(async () => {
           />
         </div>
 
-        <!-- Progress Modules - Large Left -->
+        <!-- Progress Modules - Full width on phone/tablet, 7 cols on desktop -->
         <div
-          class="lg:col-span-7 transition-all duration-500"
+          class="sm:col-span-2 lg:col-span-7 transition-all duration-500"
           :class="showCard(1) ? 'opacity-100 translate-y-0' : (isLoading ? 'opacity-100' : 'opacity-0 translate-y-4')"
         >
           <DashboardProgressModules
@@ -75,25 +75,22 @@ onMounted(async () => {
           />
         </div>
 
-        <!-- Right Column Stack -->
-        <div class="lg:col-span-5 flex flex-col gap-6">
-          <!-- Quick Actions -->
-          <div
-            class="transition-all duration-500"
-            :class="showCard(2) ? 'opacity-100 translate-y-0' : (isLoading ? 'opacity-100' : 'opacity-0 translate-y-4')"
-          >
-            <DashboardQuickActions :loading="isLoading" />
-          </div>
+        <!-- Quick Actions - 1 col on tablet, part of right column on desktop -->
+        <div
+          class="lg:col-span-5 transition-all duration-500"
+          :class="showCard(2) ? 'opacity-100 translate-y-0' : (isLoading ? 'opacity-100' : 'opacity-0 translate-y-4')"
+        >
+          <DashboardQuickActions :loading="isLoading" />
+        </div>
 
-          <!-- Daily Tasks -->
-          <div
-            class="flex-1 transition-all duration-500"
-            :class="showCard(3) ? 'opacity-100 translate-y-0' : (isLoading ? 'opacity-100' : 'opacity-0 translate-y-4')"
-          >
-            <DashboardDailyTasks
-              :loading="isLoading"
-            />
-          </div>
+        <!-- Daily Tasks - 1 col on tablet, part of right column on desktop -->
+        <div
+          class="lg:col-span-5 transition-all duration-500"
+          :class="showCard(3) ? 'opacity-100 translate-y-0' : (isLoading ? 'opacity-100' : 'opacity-0 translate-y-4')"
+        >
+          <DashboardDailyTasks
+            :loading="isLoading"
+          />
         </div>
 
         <!-- Recent Activity -->
@@ -116,9 +113,9 @@ onMounted(async () => {
           />
         </div>
 
-        <!-- Resume Preview -->
+        <!-- Resume Preview - Full Width -->
         <div
-          class="lg:col-span-12 transition-all duration-500"
+          class="sm:col-span-2 lg:col-span-12 transition-all duration-500"
           :class="showCard(5) ? 'opacity-100 translate-y-0' : (isLoading ? 'opacity-100' : 'opacity-0 translate-y-4')"
         >
           <DashboardResumePreview

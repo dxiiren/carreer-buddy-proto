@@ -154,17 +154,282 @@ Update col-spans:
 
 ---
 
-## 5. Files to Modify
+## 5. Implementation Tasks
 
-1. `layouts/dashboard.vue` - Sidebar drawer, header responsive
-2. `pages/dashboard.vue` - Grid layout breakpoints
-3. `components/dashboard/WelcomeHeader.vue` - Responsive internals
-4. `components/dashboard/ProgressModules.vue` - Module grid responsive
-5. `components/dashboard/QuickActions.vue` - Icon/button sizing
-6. `components/dashboard/DailyTasks.vue` - Padding/text responsive
-7. `components/dashboard/RecentActivity.vue` - Padding/text responsive
-8. `components/dashboard/MotivationalSection.vue` - Padding/text responsive
-9. `components/dashboard/ResumePreview.vue` - Simplified mobile view
+### Task 1: layouts/dashboard.vue - Sidebar & Header Responsive
+
+**Changes:**
+1. Add state for mobile menu:
+   ```ts
+   const isMobileMenuOpen = ref(false)
+   const isSearchOpen = ref(false)
+   ```
+
+2. Desktop sidebar (line 52-109): Add `hidden lg:flex` to aside element
+   ```vue
+   <aside class="hidden lg:flex fixed left-0 top-0 h-screen ...">
+   ```
+
+3. Add mobile slide-out drawer after the desktop sidebar:
+   ```vue
+   <!-- Mobile Drawer Overlay -->
+   <Transition name="fade">
+     <div
+       v-if="isMobileMenuOpen"
+       class="fixed inset-0 bg-black/50 z-40 lg:hidden"
+       @click="isMobileMenuOpen = false"
+     />
+   </Transition>
+
+   <!-- Mobile Drawer -->
+   <Transition name="slide">
+     <aside
+       v-if="isMobileMenuOpen"
+       class="fixed left-0 top-0 h-screen w-64 bg-card border-r border-border flex flex-col z-50 lg:hidden"
+     >
+       <!-- Same content as desktop sidebar with close button -->
+     </aside>
+   </Transition>
+   ```
+
+4. Main content margin (line 112-115): Change from fixed margin to responsive
+   ```vue
+   <div class="flex-1 flex flex-col transition-all duration-300 ml-0 lg:ml-64"
+     :class="{ 'lg:ml-16': isCollapsed }"
+   >
+   ```
+
+5. Header (line 117-162): Make responsive
+   - Change padding: `px-4 sm:px-5 lg:px-6`
+   - Add hamburger for mobile (lg:hidden):
+     ```vue
+     <button class="lg:hidden h-10 w-10 ..." @click="isMobileMenuOpen = true">
+       <Menu class="h-5 w-5" />
+     </button>
+     ```
+   - Add mobile logo after hamburger: `<div class="lg:hidden flex items-center gap-2">...</div>`
+   - Desktop sidebar toggle: Add `hidden lg:flex`
+   - Search bar: Wrap in `hidden lg:flex`, add search icon button for mobile
+   - Add expandable search overlay for mobile
+   - User name/email: Add `hidden lg:block`
+
+6. Main content padding (line 165): Change `p-6` to `p-4 sm:p-5 lg:p-6`
+
+7. Add transition styles:
+   ```css
+   .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
+   .fade-enter-from, .fade-leave-to { opacity: 0; }
+   .slide-enter-active, .slide-leave-active { transition: transform 0.3s; }
+   .slide-enter-from, .slide-leave-to { transform: translateX(-100%); }
+   ```
+
+---
+
+### Task 2: pages/dashboard.vue - Grid Layout
+
+**Changes:**
+1. Main grid (line 54): Change from `grid-cols-1 lg:grid-cols-12` to:
+   ```vue
+   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-5 lg:gap-6">
+   ```
+
+2. Welcome Header wrapper (line 56-65): Add tablet span
+   ```vue
+   <div class="sm:col-span-2 lg:col-span-12 transition-all duration-500" ...>
+   ```
+
+3. Progress Modules wrapper (line 68-76): Add tablet span
+   ```vue
+   <div class="sm:col-span-2 lg:col-span-7 transition-all duration-500" ...>
+   ```
+
+4. Right Column wrapper (line 79): Remove the wrapper div, make Quick Actions and Daily Tasks separate grid items
+   - Quick Actions: standalone (takes 1 cell on tablet)
+   - Daily Tasks: standalone (takes 1 cell on tablet)
+   - Both get `lg:col-span-5` removed, rely on `lg:grid-cols-12` for desktop positioning
+
+   OR restructure to:
+   ```vue
+   <!-- Quick Actions -->
+   <div class="lg:col-span-5 lg:row-span-1 transition-all duration-500" ...>
+
+   <!-- Daily Tasks -->
+   <div class="lg:col-span-5 lg:row-start-2 lg:col-start-8 transition-all duration-500" ...>
+   ```
+
+   Simpler approach - keep right column but make it span:
+   ```vue
+   <div class="sm:col-span-1 lg:col-span-5 flex flex-col gap-4 sm:gap-5 lg:gap-6">
+   ```
+
+5. Recent Activity (line 100-107): Add spans
+   ```vue
+   <div class="lg:col-span-6 transition-all duration-500" ...>
+   ```
+
+6. Motivational (line 110-117): Add spans
+   ```vue
+   <div class="lg:col-span-6 transition-all duration-500" ...>
+   ```
+
+7. Resume Preview (line 120-128): Add tablet span
+   ```vue
+   <div class="sm:col-span-2 lg:col-span-12 transition-all duration-500" ...>
+   ```
+
+---
+
+### Task 3: components/dashboard/WelcomeHeader.vue
+
+**Changes:**
+1. Outer padding (line 22): Change `p-6 lg:p-8` to `p-4 sm:p-5 lg:p-6 xl:p-8`
+
+2. Heading text (line 42-44): Make responsive
+   ```vue
+   <h1 class="text-xl sm:text-2xl lg:text-3xl font-heading font-bold mb-1 sm:mb-2">
+   ```
+
+3. Subtitle (line 45-47): Make responsive
+   ```vue
+   <p class="text-muted-foreground text-sm sm:text-base lg:text-lg">
+   ```
+
+4. Progress ring container (line 51-85): Make slightly smaller on mobile
+   - Ring size: `w-20 h-20 sm:w-24 sm:h-24`
+   - SVG viewBox stays same, just container shrinks
+   - Percentage text: `text-lg sm:text-xl`
+
+---
+
+### Task 4: components/dashboard/ProgressModules.vue
+
+**Changes:**
+1. Outer padding (line 33): Change `p-6` to `p-4 sm:p-5 lg:p-6`
+
+2. Title (line 63): Make responsive
+   ```vue
+   <h2 class="text-base sm:text-lg font-heading font-semibold mb-3 sm:mb-4">
+   ```
+
+3. Module grid (line 64): Already has `grid-cols-1 sm:grid-cols-2` - keep as is
+
+4. Module cards (line 65-92): Make padding responsive
+   ```vue
+   class="group rounded-xl border border-border p-3 sm:p-4 hover:border-primary/50 ..."
+   ```
+
+5. Module icon container (line 72-76): Responsive sizing
+   ```vue
+   class="h-8 w-8 sm:h-10 sm:w-10 rounded-lg ..."
+   ```
+
+6. Icon inside: `class="h-4 w-4 sm:h-5 sm:w-5"`
+
+---
+
+### Task 5: components/dashboard/QuickActions.vue
+
+**Changes:**
+1. Outer padding (line 22): Change `p-6` to `p-4 sm:p-5 lg:p-6`
+
+2. Title (line 25): Make responsive
+   ```vue
+   <h2 class="text-base sm:text-lg font-heading font-semibold mb-3 sm:mb-4">
+   ```
+
+3. Action buttons container (line 33): Already uses `flex flex-wrap gap-2` - good
+
+4. Action buttons (line 34-43): Make responsive
+   ```vue
+   class="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg ..."
+   ```
+
+5. Icon size: `class="h-3.5 w-3.5 sm:h-4 sm:w-4"`
+
+6. Button text: Add `text-xs sm:text-sm`
+
+---
+
+### Task 6: components/dashboard/DailyTasks.vue
+
+**Changes:**
+1. Outer padding (line 125): Change `p-6` to `p-4 sm:p-5 lg:p-6`
+
+2. Title (line 129): Make responsive
+   ```vue
+   <h2 class="text-base sm:text-lg font-heading font-semibold">
+   ```
+
+3. Task text (line 191-196): Already `text-sm` - good
+
+4. Add button (line 243-250): Make touch-friendly
+   ```vue
+   class="mt-3 w-full flex items-center justify-center gap-2 py-2.5 sm:py-2 text-sm ..."
+   ```
+
+---
+
+### Task 7: components/dashboard/RecentActivity.vue
+
+**Changes:**
+1. Outer padding (line 62): Change `p-6` to `p-4 sm:p-5 lg:p-6`
+
+2. Title (line 65): Make responsive
+   ```vue
+   <h2 class="text-base sm:text-lg font-heading font-semibold mb-3 sm:mb-4">
+   ```
+
+3. Activity icon container (line 94): Responsive
+   ```vue
+   class="h-7 w-7 sm:h-8 sm:w-8 rounded-lg ..."
+   ```
+
+4. Icon: `class="h-3.5 w-3.5 sm:h-4 sm:w-4"`
+
+---
+
+### Task 8: components/dashboard/MotivationalSection.vue
+
+**Changes:**
+1. Outer padding (line 82): Change `p-6` to `p-4 sm:p-5 lg:p-6`
+
+2. Quote text (line 120-122): Make responsive
+   ```vue
+   <p class="text-sm sm:text-base font-heading italic ...">
+   ```
+
+3. Tip text (line 136-138): Already `text-sm` - good
+
+4. Inner card padding (lines 114, 119, 135): Change `p-4` to `p-3 sm:p-4`
+
+---
+
+### Task 9: components/dashboard/ResumePreview.vue
+
+**Changes:**
+1. Outer padding (line 16): Change `p-6` to `p-4 sm:p-5 lg:p-6`
+
+2. Title (line 20): Make responsive
+   ```vue
+   <h2 class="text-base sm:text-lg font-heading font-semibold">
+   ```
+
+3. Edit button (line 21-26): Make touch-friendly, responsive text
+   ```vue
+   class="text-xs sm:text-sm text-primary hover:underline flex items-center gap-1 py-1"
+   ```
+
+4. Resume icon container (line 45): Responsive
+   ```vue
+   class="h-10 w-10 sm:h-12 sm:w-12 rounded-lg ..."
+   ```
+
+5. Icon: `class="h-5 w-5 sm:h-6 sm:w-6"`
+
+6. Email (line 53): Hide on very small phones
+   ```vue
+   <p class="text-xs sm:text-sm text-muted-foreground truncate">{{ resume.email }}</p>
+   ```
 
 ---
 
