@@ -75,17 +75,17 @@ onMounted(async () => {
           />
         </div>
 
-        <!-- Quick Actions - 1 col on tablet, part of right column on desktop -->
+        <!-- Quick Actions - Right of Progress on desktop -->
         <div
-          class="lg:col-span-5 transition-all duration-500"
+          class="sm:col-span-2 lg:col-span-5 transition-all duration-500"
           :class="showCard(2) ? 'opacity-100 translate-y-0' : (isLoading ? 'opacity-100' : 'opacity-0 translate-y-4')"
         >
           <DashboardQuickActions :loading="isLoading" />
         </div>
 
-        <!-- Daily Tasks - 1 col on tablet, part of right column on desktop -->
+        <!-- Daily Tasks -->
         <div
-          class="lg:col-span-5 transition-all duration-500"
+          class="lg:col-span-6 transition-all duration-500"
           :class="showCard(3) ? 'opacity-100 translate-y-0' : (isLoading ? 'opacity-100' : 'opacity-0 translate-y-4')"
         >
           <DashboardDailyTasks
@@ -103,9 +103,9 @@ onMounted(async () => {
           />
         </div>
 
-        <!-- Motivational Section -->
+        <!-- Motivational Section - Full width -->
         <div
-          class="lg:col-span-6 transition-all duration-500"
+          class="sm:col-span-2 lg:col-span-12 transition-all duration-500"
           :class="showCard(5) ? 'opacity-100 translate-y-0' : (isLoading ? 'opacity-100' : 'opacity-0 translate-y-4')"
         >
           <DashboardMotivationalSection

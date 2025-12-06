@@ -192,7 +192,7 @@ function isActive(href: string) {
 
     <!-- Main Content Area -->
     <div
-      class="flex-1 flex flex-col transition-all duration-300 ml-0"
+      class="flex-1 flex flex-col transition-all duration-300 ml-0 min-w-0 overflow-x-hidden"
       :class="isCollapsed ? 'lg:ml-16' : 'lg:ml-64'"
     >
       <!-- Top Bar -->
