@@ -14,6 +14,7 @@ import {
   Sparkles,
   Menu,
   X,
+  ChevronDown,
 } from 'lucide-vue-next'
 import ThemeToggle from '@/components/shared/ThemeToggle.vue'
 import Breadcrumbs from '@/components/shared/Breadcrumbs.vue'
@@ -24,19 +25,61 @@ const route = useRoute()
 const isCollapsed = ref(false)
 const isMobileMenuOpen = ref(false)
 const isSearchOpen = ref(false)
-
-// Close mobile menu when route changes
-watch(() => route.path, () => {
-  isMobileMenuOpen.value = false
-})
+const expandedMenus = ref<Set<string>>(new Set())
 
 const navigationItems = [
   { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-  { name: 'Resume Builder', icon: FileText, href: '/resume' },
-  { name: 'Interview Prep', icon: Mic, href: '/interview' },
-  { name: 'Networking', icon: Users, href: '/networking' },
-  { name: 'Job Search', icon: Target, href: '/job-search' },
-  { name: 'Self-Promotion', icon: TrendingUp, href: '/self-promotion' },
+  {
+    name: 'Resume Builder',
+    icon: FileText,
+    href: '/resume',
+    children: [
+      { name: 'Overview', href: '/resume' },
+      { name: 'Templates', href: '/resume/templates' },
+      { name: 'Cover Letters', href: '/resume/cover-letter' },
+      { name: 'ATS Optimization', href: '/resume/ats' },
+    ]
+  },
+  {
+    name: 'Interview Prep',
+    icon: Mic,
+    href: '/interview',
+    children: [
+      { name: 'Overview', href: '/interview' },
+      { name: 'Questions', href: '/interview/questions' },
+      { name: 'Simulation', href: '/interview/simulation' },
+    ]
+  },
+  {
+    name: 'Networking',
+    icon: Users,
+    href: '/networking',
+    children: [
+      { name: 'Overview', href: '/networking' },
+      { name: 'Templates', href: '/networking/templates' },
+    ]
+  },
+  {
+    name: 'Job Search',
+    icon: Target,
+    href: '/job-search',
+    children: [
+      { name: 'Overview', href: '/job-search' },
+      { name: 'Platforms', href: '/job-search/platforms' },
+      { name: 'Salary Guide', href: '/job-search/salary' },
+      { name: 'Scam Awareness', href: '/job-search/scams' },
+    ]
+  },
+  {
+    name: 'Self-Promotion',
+    icon: TrendingUp,
+    href: '/self-promotion',
+    children: [
+      { name: 'Overview', href: '/self-promotion' },
+      { name: 'LinkedIn', href: '/self-promotion/linkedin' },
+      { name: 'Workplace', href: '/self-promotion/workplace' },
+    ]
+  },
 ]
 
 const bottomItems = [
@@ -44,14 +87,44 @@ const bottomItems = [
   { name: 'Help & Support', icon: HelpCircle, href: '/help' },
 ]
 
+function toggleMenu(href: string) {
+  if (expandedMenus.value.has(href)) {
+    expandedMenus.value.delete(href)
+  } else {
+    expandedMenus.value.add(href)
+  }
+}
+
+function isMenuExpanded(href: string) {
+  return expandedMenus.value.has(href)
+}
+
 function handleLogout() {
   logout()
   navigateTo('/')
 }
 
 function isActive(href: string) {
-  return route.path === href
+  // Exact match for dashboard, startsWith for other pages
+  if (href === '/dashboard') {
+    return route.path === '/dashboard'
+  }
+  return route.path === href || route.path.startsWith(href + '/')
 }
+
+// Close mobile menu when route changes
+watch(() => route.path, () => {
+  isMobileMenuOpen.value = false
+})
+
+// Auto-expand menu if on a subpage
+watch(() => route.path, (path) => {
+  navigationItems.forEach(item => {
+    if (item.children && path.startsWith(item.href + '/')) {
+      expandedMenus.value.add(item.href)
+    }
+  })
+}, { immediate: true })
 </script>
 
 <template>
@@ -78,20 +151,73 @@ function isActive(href: string) {
 
       <!-- Navigation -->
       <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
-        <NuxtLink
-          v-for="item in navigationItems"
-          :key="item.name"
-          :to="item.href"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200"
-          :class="[
-            isActive(item.href)
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-          ]"
-        >
-          <component :is="item.icon" class="h-5 w-5 shrink-0" />
-          <span v-if="!isCollapsed" class="text-sm font-medium">{{ item.name }}</span>
-        </NuxtLink>
+        <template v-for="item in navigationItems" :key="item.name">
+          <!-- Item without children -->
+          <NuxtLink
+            v-if="!item.children"
+            :to="item.href"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200"
+            :class="[
+              isActive(item.href)
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            ]"
+          >
+            <component :is="item.icon" class="h-5 w-5 shrink-0" />
+            <span v-if="!isCollapsed" class="text-sm font-medium">{{ item.name }}</span>
+          </NuxtLink>
+
+          <!-- Item with children (dropdown) -->
+          <div v-else>
+            <button
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200"
+              :class="[
+                isActive(item.href)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              ]"
+              @click="toggleMenu(item.href)"
+            >
+              <component :is="item.icon" class="h-5 w-5 shrink-0" />
+              <span v-if="!isCollapsed" class="text-sm font-medium flex-1 text-left">{{ item.name }}</span>
+              <ChevronDown
+                v-if="!isCollapsed"
+                class="h-4 w-4 shrink-0 transition-transform duration-200"
+                :class="isMenuExpanded(item.href) ? 'rotate-180' : ''"
+              />
+            </button>
+
+            <!-- Submenu -->
+            <Transition
+              enter-active-class="transition-all duration-200 ease-out"
+              enter-from-class="opacity-0 max-h-0"
+              enter-to-class="opacity-100 max-h-48"
+              leave-active-class="transition-all duration-200 ease-in"
+              leave-from-class="opacity-100 max-h-48"
+              leave-to-class="opacity-0 max-h-0"
+            >
+              <div
+                v-if="isMenuExpanded(item.href) && !isCollapsed"
+                class="ml-4 mt-1 space-y-1 overflow-hidden"
+              >
+                <NuxtLink
+                  v-for="child in item.children"
+                  :key="child.href"
+                  :to="child.href"
+                  class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200"
+                  :class="[
+                    route.path === child.href
+                      ? 'bg-primary/10 text-primary font-medium'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ]"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full" :class="route.path === child.href ? 'bg-primary' : 'bg-muted-foreground/50'" />
+                  {{ child.name }}
+                </NuxtLink>
+              </div>
+            </Transition>
+          </div>
+        </template>
       </nav>
 
       <!-- Bottom Section -->
@@ -100,7 +226,12 @@ function isActive(href: string) {
           v-for="item in bottomItems"
           :key="item.name"
           :to="item.href"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200"
+          :class="[
+            isActive(item.href)
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+          ]"
         >
           <component :is="item.icon" class="h-5 w-5 shrink-0" />
           <span v-if="!isCollapsed" class="text-sm font-medium">{{ item.name }}</span>
@@ -151,20 +282,72 @@ function isActive(href: string) {
 
         <!-- Navigation -->
         <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
-          <NuxtLink
-            v-for="item in navigationItems"
-            :key="item.name"
-            :to="item.href"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200"
-            :class="[
-              isActive(item.href)
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            ]"
-          >
-            <component :is="item.icon" class="h-5 w-5 shrink-0" />
-            <span class="text-sm font-medium">{{ item.name }}</span>
-          </NuxtLink>
+          <template v-for="item in navigationItems" :key="item.name">
+            <!-- Item without children -->
+            <NuxtLink
+              v-if="!item.children"
+              :to="item.href"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200"
+              :class="[
+                isActive(item.href)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              ]"
+            >
+              <component :is="item.icon" class="h-5 w-5 shrink-0" />
+              <span class="text-sm font-medium">{{ item.name }}</span>
+            </NuxtLink>
+
+            <!-- Item with children (dropdown) -->
+            <div v-else>
+              <button
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200"
+                :class="[
+                  isActive(item.href)
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                ]"
+                @click="toggleMenu(item.href)"
+              >
+                <component :is="item.icon" class="h-5 w-5 shrink-0" />
+                <span class="text-sm font-medium flex-1 text-left">{{ item.name }}</span>
+                <ChevronDown
+                  class="h-4 w-4 shrink-0 transition-transform duration-200"
+                  :class="isMenuExpanded(item.href) ? 'rotate-180' : ''"
+                />
+              </button>
+
+              <!-- Submenu -->
+              <Transition
+                enter-active-class="transition-all duration-200 ease-out"
+                enter-from-class="opacity-0 max-h-0"
+                enter-to-class="opacity-100 max-h-48"
+                leave-active-class="transition-all duration-200 ease-in"
+                leave-from-class="opacity-100 max-h-48"
+                leave-to-class="opacity-0 max-h-0"
+              >
+                <div
+                  v-if="isMenuExpanded(item.href)"
+                  class="ml-4 mt-1 space-y-1 overflow-hidden"
+                >
+                  <NuxtLink
+                    v-for="child in item.children"
+                    :key="child.href"
+                    :to="child.href"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200"
+                    :class="[
+                      route.path === child.href
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ]"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full" :class="route.path === child.href ? 'bg-primary' : 'bg-muted-foreground/50'" />
+                    {{ child.name }}
+                  </NuxtLink>
+                </div>
+              </Transition>
+            </div>
+          </template>
         </nav>
 
         <!-- Bottom Section -->
@@ -173,7 +356,12 @@ function isActive(href: string) {
             v-for="item in bottomItems"
             :key="item.name"
             :to="item.href"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200"
+            :class="[
+              isActive(item.href)
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            ]"
           >
             <component :is="item.icon" class="h-5 w-5 shrink-0" />
             <span class="text-sm font-medium">{{ item.name }}</span>
